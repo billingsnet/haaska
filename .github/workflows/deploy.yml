@@ -13,11 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Build haaska.zip
         env:
           HAASKA_CONFIG: ${{ secrets.HAASKA_CONFIG }}
@@ -25,7 +20,6 @@ jobs:
           mkdir -p build
           cp haaska.py config/config.json.sample build
           echo "$HAASKA_CONFIG" > build/config.json
-          pip install -t build requests
           cd build && zip ../haaska.zip -r *
 
       - name: Deploy to Lambda
