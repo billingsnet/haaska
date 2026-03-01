@@ -32,5 +32,10 @@ def event_handler(event, context):
         }
     )
 
-    with urllib.request.urlopen(req, timeout=8) as r:
-        return json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='replace')
+        logger.error('HTTP %s from HA: %s', e.code, body[:500])
+        raise
