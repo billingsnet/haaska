@@ -1,0 +1,44 @@
+name: Deploy to Lambda
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '*.md'
+      - 'images/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build haaska.zip
+        env:
+          HAASKA_CONFIG: ${{ secrets.HAASKA_CONFIG }}
+        run: |
+          mkdir -p build
+          cp haaska.py config/config.json.sample build
+          echo "$HAASKA_CONFIG" > build/config.json
+          pip install -t build requests
+          cd build && zip ../haaska.zip -r *
+
+      - name: Deploy to Lambda
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          aws lambda update-function-configuration \
+            --function-name haaska \
+            --handler haaska.event_handler \
+            --runtime python3.12
+          sleep 5
+          aws lambda update-function-code \
+            --function-name haaska \
+            --zip-file fileb://haaska.zip

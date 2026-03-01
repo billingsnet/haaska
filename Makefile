@@ -9,14 +9,15 @@ BUILD_DIR=build
 haaska.zip: haaska.py config/*
 	mkdir -p $(BUILD_DIR)
 	cp $^ $(BUILD_DIR)
-	pip install -t $(BUILD_DIR) requests
+	pip3 install -t $(BUILD_DIR) requests
 	cd $(BUILD_DIR); zip ../$@ -r *
 
 .PHONY: deploy
 deploy: haaska.zip
 	aws lambda update-function-configuration \
 		--function-name $(FUNCTION_NAME) \
-		--handler haaska.event_handler
+		--handler haaska.event_handler \
+		--runtime python3.12
 	aws lambda update-function-code \
 		--function-name $(FUNCTION_NAME) \
 		--zip-file fileb://$<
